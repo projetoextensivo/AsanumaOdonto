@@ -1,60 +1,83 @@
-﻿# Asanuma Odonto — front-end
+# Frontend — Asanuma Odonto
 
-React + Vite. Atendimento exclusivamente particular.
+Interface web para as rotinas da clínica odontológica. O frontend usa React e Vite e consome a API Spring Boot descrita no [README do backend](../backend/README.md). Para visão geral do produto, consulte o [README principal](../README.md).
 
-- Administradora: dashboard, procedimentos, prontuários, agenda, pacientes e configurações da clínica.
-- Secretária: cadastrar/editar pacientes, visualizar/editar agenda, agendar e reagendar consultas, além da própria conta. O cadastro público cria somente secretárias.
-- Arraste uma consulta para outro dia na visão mensal ou para um horário nas visões semanal/diária. A API verifica expediente, domingo e sobreposição antes de salvar. Também é possível clicar na consulta e editar data/horário, inclusive no celular.
+## Tecnologias e requisitos
 
-## Arquitetura MVVM
+- Node.js 22.13 ou superior
+- npm
+- React 19
+- Vite 7
+- Axios
 
-O código é organizado por funcionalidade em `src/features/<funcionalidade>`. Cada módulo contém somente as camadas que usa:
+## Executar em desenvolvimento
 
-- **Model** (`model/`): regras e dados do domínio. Agenda/consultas, procedimentos e prontuários mantêm aqui seus modelos.
-- **View** (`view/`): páginas, formulários, componentes visuais e estilos React.
-- **ViewModel** (`viewmodel/`): hooks personalizados que concentram estado, filtros, cálculos de tela, validações e ações de cada funcionalidade.
-- **Services** (`services/`): chamadas HTTP e integrações externas; autenticação e configurações ficam nos módulos correspondentes.
+Inicie primeiro a API Spring Boot na pasta `backend/`. Em seguida, na pasta `frontend/`, instale as dependências e inicie o Vite:
 
-A composição e o estado de sessão da aplicação ficam em `src/app`. Componentes reutilizáveis permanecem em `src/shared/view`, utilitários de domínio comuns em `src/shared/model` e o cliente HTTP e integrações comuns em `src/shared/services`. Widgets compostos, como o menu e o odontograma, ficam em `src/widgets`.
-
-A mudança reorganiza a estrutura e move lógica de apresentação para hooks. As telas, os estilos, os fluxos e as regras de negócio existentes foram mantidos.
-
-## Usar com Spring Boot
-
-A API Spring Boot está em `../backend`. Abra `../backend/pom.xml` no IntelliJ e selecione JDK 21. Na execução de `AsanumaOdontoApplication`, configure `ADMIN_EMAIL` e `ADMIN_PASSWORD`; inicie a aplicação na porta 8080. O README do back-end detalha banco, variáveis e endpoints.
-
-Neste front-end execute `npm install` e `npm run dev`. Acesse `http://127.0.0.1:5173`. As requisições `/api` são encaminhadas para `http://127.0.0.1:8080`. Ajuste `API_PROXY_TARGET` no ambiente para outra porta. `VITE_API_BASE_URL` permite mudar a URL base; prefira `/api` com proxy para manter cookies na mesma origem. O servidor de produção também precisa encaminhar `/api` à API Spring.
-
-Em instalação vazia, cadastre os procedimentos com a administradora antes do primeiro agendamento. Não há migração automática do banco SQLite de demonstração para o banco H2 do Spring.
-
-## Demonstração local
-
-`npm run dev:demo` inicia a API Node/SQLite de demonstração e Vite. Login: `demo@asanumaodonto.com` / `Odonto@2026` (administradora). No Spring, esse login só existe com `DEMO_MODE=true`.
-
-## Verificações
-
-`npm test`: executa os testes Node em `tests/*.test.mjs`; no estado atual do repositório não há arquivos de teste nessa pasta, então o runner reporta 0 testes. `npm run build`: build de produção. `npm run test:e2e`: fluxos no navegador contra a API Node. Para testar contra Vite + Spring em execução: `E2E_BASE_URL=http://127.0.0.1:5173 npx playwright test` (defina a variável conforme seu terminal). Os testes usam dados fictícios e precisam de uma base descartável com `DEMO_MODE=true`.
-
-O back-end inclui testes de integração Maven para autenticação, perfis, cadastro, reagendamento e conflitos. Java 21 e Maven são requisitos do [Spring Boot](https://docs.spring.io/spring-boot/3.5/system-requirements.html).
-
-## Acessar de outras máquinas na mesma rede
-
-1. No terminal da pasta `frontend`, execute `npm run preparar:rede`. O comando gera `dist` com a API relativa `/api` e mostra os endereços IP privados disponíveis.
-2. No IntelliJ, abra `backend`, confira o JDK 21 e as variáveis `ADMIN_EMAIL`/`ADMIN_PASSWORD`. O **Working directory** da configuração de execução deve ser a pasta `backend` (normalmente `$PROJECT_DIR$`). Reinicie `AsanumaOdontoApplication`.
-3. Nesta máquina, abra `http://localhost:8080`. Na outra máquina, abra `http://IP-DA-MAQUINA-SERVIDORA:8080`. O IPv4 do adaptador Wi-Fi/Ethernet aparece em `ipconfig`; não use o IP de WSL, VPN ou loopback. O IP pode mudar quando você troca de rede.
-
-O Spring serve os arquivos de `../frontend/dist/` e a API na mesma porta. As outras máquinas precisam somente de navegador e acesso à mesma rede; não precisam instalar Java ou Node. Não use `localhost` na máquina visitante, pois ele aponta para a própria máquina visitante. O host deve ficar ligado, conectado e com o Java em execução. Não é necessário executar `npm run dev` nesse modo. Execute novamente `npm run preparar:rede` e reinicie o Java depois de alterar a interface.
-
-Se o acesso local funcionar e o acesso pelo IP não, confira se o Windows está usando o perfil de rede **Privada**, permita o Java no Firewall para essa rede e verifique se o Wi-Fi bloqueia a comunicação entre dispositivos (rede de convidados). Não desative o Firewall. Se precisar de uma regra explícita, execute no PowerShell como administrador:
-
-```powershell
-New-NetFirewallRule -DisplayName 'Asanuma Odonto - rede local' -Direction Inbound -Action Allow -Protocol TCP -LocalPort 8080 -Profile Private -RemoteAddress LocalSubnet
+```bash
+npm ci
+npm run dev
 ```
 
-Para remover somente essa regra:
+Abra `http://127.0.0.1:5173`. O Vite encaminha `/api` para `http://127.0.0.1:8080`, conforme `vite.config.js`. Use o mesmo hostname (por exemplo, `127.0.0.1`) no navegador e nas URLs da aplicação para manter a sessão por cookie na mesma origem.
 
-```powershell
-Remove-NetFirewallRule -DisplayName 'Asanuma Odonto - rede local'
+`VITE_HOST` altera o endereço de escuta do Vite; o padrão é `127.0.0.1`. Para usar outra origem de API durante o desenvolvimento, configure `API_PROXY_TARGET`. `VITE_API_BASE_URL` muda a URL base usada pelo cliente HTTP; para desenvolvimento local, prefira `/api` e o proxy do Vite.
+
+## Acesso por outros dispositivos da rede local
+
+Inicie a API Spring Boot normalmente. Depois, na pasta `frontend/`, inicie o Vite escutando na interface de rede:
+
+```bash
+VITE_HOST=0.0.0.0 npm run dev
 ```
 
-Esse modo destina-se à rede local de confiança. Para acesso pela internet e uso com dados reais, configure hospedagem e HTTPS. Não é necessário abrir portas no roteador para acessar pela mesma rede.
+No PowerShell:
+
+```powershell
+$env:VITE_HOST = "0.0.0.0"
+npm run dev
+```
+
+Descubra o IPv4 da máquina que executa o Vite (`hostname -I` no Linux ou `ipconfig` no Windows) e, no outro dispositivo conectado à mesma rede, abra `http://IP-DA-MAQUINA:5173`. O frontend continua chamando `/api` na mesma origem; o Vite encaminha as chamadas ao backend local em `127.0.0.1:8080`, portanto não é necessário expor a porta 8080 nem alterar `ALLOWED_ORIGINS` nesse modo.
+
+Se não conectar, permita a entrada TCP na porta 5173 no firewall da máquina anfitriã, restrita ao perfil de rede privada e à rede local. Verifique também se os dispositivos estão na mesma rede e se o roteador não isola clientes (por exemplo, rede de convidados). O endereço `0.0.0.0` é apenas o endereço de escuta; não o use no navegador.
+
+Esse fluxo usa o servidor de desenvolvimento do Vite e é indicado para desenvolvimento ou demonstração em uma rede confiável. Para uso contínuo ou com dados reais, publique o build em um servidor configurado para HTTPS e encaminhe `/api` ao backend.
+
+## Funcionalidades por perfil
+
+| Perfil | Acesso principal |
+| --- | --- |
+| Administradora | Dashboard, agenda, pacientes, procedimentos, prontuários, configurações e usuários. |
+| Secretária | Agenda, cadastro e edição de pacientes, agendamento e conta própria. |
+
+Em **Configurações → Usuários**, a administradora pode criar, editar, ativar ou inativar contas, redefinir senhas e excluir usuários. A lista exibe contas **Ativas**, **Inativas** ou **Bloqueadas** e permite desbloquear uma conta imediatamente. Três senhas incorretas bloqueiam o login por cinco minutos. A última administradora ativa não pode ser removida, desativada ou rebaixada.
+
+Enquanto o sistema está aberto, o frontend consulta a sessão a cada 10 segundos e quando a aba volta a ficar visível. Se a API indicar conta inativa ou bloqueada, a sessão local é encerrada e a interface retorna ao login.
+
+Na agenda, as consultas podem ser visualizadas por dia, semana ou mês e reagendadas por edição ou arraste. A API valida expediente, dentista, duração e sobreposição antes de salvar.
+
+## Organização do código
+
+O frontend segue MVVM por funcionalidade em `src/features/<funcionalidade>`:
+
+- `model/`: dados e regras específicas do domínio.
+- `view/`: páginas, formulários, componentes React e estilos.
+- `viewmodel/`: hooks para estado, validações e ações da interface.
+- `services/`: chamadas HTTP e integrações da funcionalidade.
+
+A composição e a sessão da aplicação ficam em `src/app`. Código reutilizável fica em `src/shared`; componentes compostos, como o shell da aplicação e o odontograma, ficam em `src/widgets`.
+
+## Build e publicação
+
+Para gerar os arquivos de produção:
+
+```bash
+npm run build
+```
+
+O Vite grava a saída em `frontend/dist/`. O repositório não inclui uma configuração de hospedagem de produção; publique `dist/` em um servidor estático e encaminhe `/api` à API Spring Boot. Sirva interface e API na mesma origem para simplificar o uso de cookies de sessão, ou configure CORS e cookies adequadamente para a arquitetura escolhida.
+
+## Scripts declarados
+
+`npm run dev` e `npm run build` são os fluxos mantidos para desenvolvimento e build. O `package.json` também declara scripts de servidor, demonstração, testes e preparação de rede que apontam para diretórios ausentes neste checkout (`server/`, `scripts/` e `tests/`); esses fluxos não estão disponíveis até que seus arquivos sejam incluídos.

@@ -4,6 +4,10 @@ export async function loadClinic() {
   return (await api.get('/bootstrap')).data;
 }
 
+export async function checkClinicSession() {
+  return (await api.get('/auth/me')).data;
+}
+
 export async function saveClinicEntity(kind, item) {
   const { id, ...body } = item;
   return id ? api.put(`/${kind}/${id}`, body) : api.post(`/${kind}`, body);

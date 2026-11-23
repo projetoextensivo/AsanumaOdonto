@@ -7,7 +7,7 @@ export default defineConfig(({ mode }) => {
   plugins: [react()],
   resolve: { alias: { '@': fileURLToPath(new URL('./src', import.meta.url)) } },
   server: {
-   host: '127.0.0.1', port: 5173,
+   host: process.env.VITE_HOST || env.VITE_HOST || '0.0.0.0', port: 5173,
    proxy: { '/api': process.env.API_PROXY_TARGET || env.API_PROXY_TARGET || 'http://127.0.0.1:8080' }
   }
  };
