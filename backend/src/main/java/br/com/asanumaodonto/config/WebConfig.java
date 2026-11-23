@@ -18,7 +18,7 @@ public class WebConfig implements WebMvcConfigurer {
    if("OPTIONS".equals(req.getMethod()))return true;
    String origin=req.getHeader("Origin");if(!List.of("GET","HEAD").contains(req.getMethod())){String self=req.getScheme()+"://"+req.getHeader("Host");if((origin!=null&&!origin.equals(self)&&!Arrays.asList(origins).contains(origin))||"cross-site".equals(req.getHeader("Sec-Fetch-Site")))throw new ApiException("Origem não autorizada.",403);}
    String p=req.getRequestURI();if(p.equals("/api/health")||p.equals("/api/auth/login")||p.equals("/api/auth/register"))return true;
-   var user=auth.current(req);if(p.startsWith("/api/procedures")||p.startsWith("/api/records")||p.equals("/api/dashboard")||p.equals("/api/settings")||("DELETE".equals(req.getMethod())&&p.startsWith("/api/patients")))auth.requireAdmin(user);
+   var user=auth.current(req);if(p.startsWith("/api/users")||p.startsWith("/api/procedures")||p.startsWith("/api/records")||p.equals("/api/dashboard")||p.equals("/api/settings")||("DELETE".equals(req.getMethod())&&p.startsWith("/api/patients")))auth.requireAdmin(user);
    return true;
   }
  }).addPathPatterns("/api/**");}

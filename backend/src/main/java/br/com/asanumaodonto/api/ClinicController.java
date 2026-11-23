@@ -16,6 +16,11 @@ public class ClinicController {
  @PostMapping("/auth/logout") public Object logout(HttpServletRequest r){r.getSession().invalidate();return Map.of("ok",true);}
  @GetMapping("/bootstrap") public Object bootstrap(HttpServletRequest r){return clinic.bootstrap(auth.current(r));}
  @PutMapping("/account") public Object account(@RequestBody Map<String,Object> b,HttpServletRequest r){return auth.account(b,auth.current(r));}
+ @GetMapping("/users") public Object users(HttpServletRequest r){return auth.users(auth.current(r));}
+ @PostMapping("/users") public ResponseEntity<?> createUser(@RequestBody Map<String,Object> b,HttpServletRequest r){return ResponseEntity.status(201).body(auth.createUser(b,auth.current(r)));}
+ @PutMapping("/users/{id}") public Object updateUser(@PathVariable String id,@RequestBody Map<String,Object> b,HttpServletRequest r){return auth.updateManagedUser(id,b,auth.current(r));}
+ @PostMapping("/users/{id}/unlock") public Object unlockUser(@PathVariable String id,HttpServletRequest r){return auth.unlockUser(id,auth.current(r));}
+ @DeleteMapping("/users/{id}") public Object deleteUser(@PathVariable String id,HttpServletRequest r){auth.deleteManagedUser(id,auth.current(r));return Map.of("ok",true);}
  @PutMapping("/settings") public Object settings(@RequestBody Map<String,Object> b){return clinic.saveSettings(b);}
  @GetMapping("/{kind:patients|procedures|appointments|records}") public Object list(@PathVariable String kind,HttpServletRequest r){return clinic.list(kind,auth.admin(auth.current(r)));}
  @GetMapping("/{kind:patients|procedures|appointments|records}/{id}") public Object get(@PathVariable String kind,@PathVariable String id,HttpServletRequest r){return clinic.visible(kind,clinic.required(kind,id),auth.admin(auth.current(r)));}

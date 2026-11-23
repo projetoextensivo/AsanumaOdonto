@@ -1,23 +1,90 @@
-# Asanuma Odonto — API Spring Boot
-Projeto independente do front-end, com Java 21 e Spring Boot 3.5.16, conforme as versões do esqueleto original. Abra este diretório ou pom.xml no IntelliJ como projeto Maven. Selecione JDK 21 e aguarde a importação.
+# Backend — Asanuma Odonto
 
-## Executar no IntelliJ
-Na configuração de execução de AsanumaOdontoApplication defina as variáveis ADMIN_EMAIL e ADMIN_PASSWORD (8 a 72 caracteres). O primeiro início cria a administradora. Não existe cadastro público de administradora.
-Para explorar dados fictícios, defina DEMO_MODE=true (somente desenvolvimento). Isso disponibiliza demo@asanumaodonto.com / Odonto@2026 como administradora. Sem DEMO_MODE a instalação começa vazia, sem senha padrão. Cadastre procedimentos com a administradora antes de agendar.
-Execute AsanumaOdontoApplication. A API escuta em http://127.0.0.1:8080/api. Com Maven instalado: mvn test e mvn spring-boot:run.
-No projeto frontend: npm install e npm run dev. O Vite encaminha /api para a porta 8080. Não execute a API Node ao usar Spring.
-Use sempre o mesmo hostname no navegador (localhost ou 127.0.0.1). O proxy permite cookies de sessão na mesma origem. ALLOWED_ORIGINS configura as origens permitidas; COOKIE_SECURE=true deve ser usado com HTTPS.
+API REST da aplicação, responsável por autenticação, autorização, regras de negócio e persistência. Para a visão geral e a execução integrada, consulte o [README principal](../README.md).
 
-## Perfis
-Administradora: agenda, pacientes, procedimentos, prontuários, configurações da clínica e dados usados no dashboard.
-Secretária: agenda, cadastro/edição de pacientes e própria conta. Sem acesso às rotas de procedimentos, prontuários, configurações da clínica e exclusão de pacientes. O bootstrap não envia catálogo completo, prontuários nem valores financeiros de consultas. Envia somente id/nome/duração das opções necessárias ao agendamento.
-O cadastro público cria apenas Secretária; enviar outro cargo é rejeitado.
-Atendimento exclusivamente particular; não há convênio no modelo ou nos formulários.
+## Tecnologias
 
-## Persistência e estrutura
-api/: controllers e tratamento de erros; service/: autenticação, autorização e regras; repository/: persistência JDBC; config/: sessão, origem, CORS e carga inicial.
-H2 em arquivo ./data/asanumaodonto.mv.db, fora do front-end. Configurável com DB_URL, DB_USER e DB_PASSWORD. Os registros de domínio são armazenados em JSON por tipo/id; usuários possuem tabela própria e senhas BCrypt. Não existe migração automática do SQLite Node. Copie o banco com a API parada para backup.
-Rotas compatíveis com o React: /auth/login, /auth/register, /auth/me, /auth/logout, /bootstrap, /account, /settings, /patients, /procedures, /appointments e /records; CRUD nas coleções e ids. Erros retornam {message}; 401 sem sessão, 403 sem permissão e 409 em conflito.
-Arrastar na agenda usa PUT /appointments/{id}, preserva dados e valida duração, expediente, domingo e sobreposição do dentista. Falhas não alteram a consulta. Atualizações de consultas bloqueiam a linha de configuração no banco até o commit para evitar sobreposição concorrente.
+- Java 21
+- Spring Boot 3.5.16
+- Maven
+- Spring Web e JDBC
+- H2 como banco padrão
+- BCrypt para armazenamento de senhas
 
-Referência: https://docs.spring.io/spring-boot/3.5/system-requirements.html
+## Executar localmente
+
+Na pasta `backend/`, configure as credenciais iniciais da administradora e inicie a aplicação:
+
+```bash
+export ADMIN_EMAIL="admin@exemplo.com"
+export ADMIN_PASSWORD="defina-uma-senha-segura"
+mvn spring-boot:run
+```
+
+No PowerShell, defina as variáveis com `$env:ADMIN_EMAIL="admin@exemplo.com"` e `$env:ADMIN_PASSWORD="defina-uma-senha-segura"`. A senha deve ter de 8 a 72 caracteres.
+
+O bootstrap cria a administradora se o e-mail configurado ainda não existir. O cadastro público não permite criar administradoras. A API inicia em `http://127.0.0.1:8080`; sua verificação de saúde está em `GET /api/health`.
+
+Para iniciar pelo IntelliJ, abra `backend/pom.xml`, selecione o JDK 21 e use `backend/` como diretório de trabalho. O diretório de trabalho define onde o arquivo local do H2 será criado.
+
+## Configuração
+
+| Variável | Padrão | Descrição |
+| --- | --- | --- |
+| `PORT` | `8080` | Porta HTTP da API. |
+| `ADMIN_EMAIL` | vazio | E-mail da administradora inicial. |
+| `ADMIN_PASSWORD` | vazio | Senha inicial, obrigatória quando se cria uma administradora. |
+| `DEMO_MODE` | `false` | Carrega dados e conta de demonstração quando habilitado. |
+| `DB_URL` | `jdbc:h2:file:./data/asanumaodonto;DB_CLOSE_ON_EXIT=FALSE` | URL JDBC do banco. |
+| `DB_USER` | `sa` | Usuário JDBC. |
+| `DB_PASSWORD` | vazio | Senha JDBC para instalação local H2. |
+| `ALLOWED_ORIGINS` | origens locais do Vite | Lista de origens CORS permitidas, separadas por vírgula. |
+| `COOKIE_SECURE` | `false` | Use `true` quando a aplicação estiver publicada com HTTPS. |
+
+Em uma base vazia, o modo de demonstração disponibiliza `demo@asanumaodonto.com` com a senha `Odonto@2026` e dados fictícios. Use-o somente em ambiente local descartável; não o habilite em uma instalação com dados reais.
+
+## Perfis e regras de acesso
+
+| Perfil | Permissões principais |
+| --- | --- |
+| Administradora | Dashboard, agenda, pacientes, procedimentos, prontuários, configurações e gerenciamento de usuários. |
+| Secretária | Agenda, cadastro e edição de pacientes, agendamentos e própria conta. Não acessa procedimentos, prontuários, configurações administrativas ou exclusão de pacientes. |
+
+A API valida as permissões no servidor. O cadastro público cria somente secretárias. As respostas da secretária omitem prontuários e valores financeiros; para agendar, ela recebe apenas as opções de procedimento necessárias.
+
+Após três senhas incorretas, o login fica bloqueado por cinco minutos. Administradoras podem desbloquear contas antes do prazo e marcar usuários como ativos ou inativos. Contas inativas não autenticam e a sessão é invalidada na próxima requisição autenticada; o gerenciamento também impede a remoção, desativação ou rebaixamento da última administradora ativa.
+
+## Rotas principais
+
+Todas as rotas usam o prefixo `/api`.
+
+| Recurso | Rotas | Acesso |
+| --- | --- | --- |
+| Saúde | `GET /health` | Público. |
+| Autenticação | `POST /auth/login`, `POST /auth/register`, `GET /auth/me`, `POST /auth/logout` | Login e cadastro são públicos; demais operações exigem sessão. Cadastro público cria secretária. |
+| Dados iniciais | `GET /bootstrap` | Sessão autenticada; resposta filtrada pelo perfil. |
+| Conta | `PUT /account` | Sessão autenticada; edição da própria conta. |
+| Configurações da clínica | `PUT /settings` | Administradora. |
+| Usuários | `GET/POST /users`, `PUT/DELETE /users/{id}`, `POST /users/{id}/unlock` | Administradora. |
+| Pacientes | `/patients` e `/patients/{id}` | Sessão autenticada; exclusão somente por administradora. |
+| Procedimentos | `/procedures` e `/procedures/{id}` | Administradora. |
+| Agendamentos | `/appointments` e `/appointments/{id}` | Sessão autenticada; regras de agenda verificadas pela API. |
+| Prontuários | `/records` e `/records/{id}` | Administradora. |
+
+Coleções de negócio suportam operações CRUD conforme o perfil. As respostas de erro seguem o formato `{ "message": "..." }`: `401` para sessão ausente ou credencial inválida, `403` para falta de permissão ou conta inativa, `404` para registro inexistente, `409` para conflito e `423` durante bloqueio temporário.
+
+## Persistência e segurança
+
+O H2 local é criado por padrão em `backend/data/asanumaodonto.mv.db`. `DB_URL`, `DB_USER` e `DB_PASSWORD` permitem configurar outra conexão JDBC. O schema é inicializado em `src/main/resources/schema.sql`; os registros de domínio ficam em JSON na tabela `clinic_entities`, e as contas ficam em `clinic_users`. O schema adiciona as colunas de situação e bloqueio de login de forma idempotente.
+
+Senhas são armazenadas com BCrypt. A sessão usa cookie `HttpOnly` e `SameSite=Strict`; o prazo é de 12 horas sem a opção “Lembrar de mim” e de 7 dias quando ela está ativa. Escritas passam por validação de origem; CORS com credenciais exige origens explícitas. Em produção, use HTTPS, habilite `COOKIE_SECURE=true`, configure `ALLOWED_ORIGINS` com os hosts reais e mantenha credenciais fora do repositório.
+
+Não existe migração automática dos dados da antiga demonstração Node/SQLite para o H2. Para fazer backup do arquivo H2, pare a API antes de copiá-lo.
+
+## Testes
+
+Execute os testes de integração com Maven na pasta `backend/`:
+
+```bash
+mvn test
+```
