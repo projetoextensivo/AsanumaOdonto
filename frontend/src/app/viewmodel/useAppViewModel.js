@@ -63,7 +63,7 @@ export function useAppViewModel() {
   }, [data?.user?.id]);
 
   useEffect(() => {
-    refresh().catch(() => {}).finally(() => setLoading(false));
+    refresh().catch(() => { }).finally(() => setLoading(false));
     const listener = () => setPath(window.location.hash.slice(1) || 'agenda');
     window.addEventListener('hashchange', listener);
     return () => window.removeEventListener('hashchange', listener);
@@ -93,7 +93,7 @@ export function useAppViewModel() {
     try {
       const session = await refresh();
       if (session) navigate(isAdmin(session.user || user) ? 'dashboard' : 'agenda');
-    } catch {} finally { setLoading(false); }
+    } catch { } finally { setLoading(false); }
   }
 
   async function confirmAction(currentModal) {
