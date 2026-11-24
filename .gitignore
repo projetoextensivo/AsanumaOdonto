@@ -24,3 +24,10 @@ pnpm-debug.log*
 # Sistema operacional
 .DS_Store
 Thumbs.db
+
+# Memória local do Codex (não versionar)
+/.codex-memory/
+/AGENTS.md
+
+#Script
+/infra/
