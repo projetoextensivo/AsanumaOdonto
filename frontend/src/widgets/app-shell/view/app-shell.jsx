@@ -3,7 +3,7 @@ import { LayoutDashboard, CalendarDays, Users, ClipboardList, Stethoscope, Setti
 import { ToothLogo, IconButton } from '@/shared/view';
 import { useAppShellViewModel } from '../viewmodel/useAppShellViewModel.js';
 import { initials, isAdmin } from '@/shared/model';
-const navigation=[['dashboard','Dashboard',LayoutDashboard],['agenda','Agenda',CalendarDays],['pacientes','Pacientes',Users],['prontuarios','Prontuários',ClipboardList],['procedimentos','Procedimentos',Stethoscope]];
+const navigation=[['dashboard','Dashboard',LayoutDashboard],['procedimentos','Procedimentos',Stethoscope],['pacientes','Pacientes',Users],['prontuarios','Prontuários',ClipboardList],['agenda','Agenda',CalendarDays]];
 export function AppShell({user,settings,route,onNavigate,onLogout,children}) {
  const {open,toggle,close}=useAppShellViewModel(); const current=navigation.find(n=>n[0]===route)?.[1]||'Configurações';
  function go(path){onNavigate(path);close();}

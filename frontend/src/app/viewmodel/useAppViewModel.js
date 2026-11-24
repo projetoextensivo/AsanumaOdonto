@@ -87,11 +87,13 @@ export function useAppViewModel() {
     setToast(item.id ? 'Alterações salvas com sucesso.' : kind === 'appointments' ? 'Consulta agendada com sucesso.' : 'Registro salvo com sucesso.');
   }
 
-  async function authenticated() {
+  async function authenticated(user) {
     setLoading(true);
     setAuthNotice('');
-    navigate('agenda');
-    try { await refresh(); } catch {} finally { setLoading(false); }
+    try {
+      const session = await refresh();
+      if (session) navigate(isAdmin(session.user || user) ? 'dashboard' : 'agenda');
+    } catch {} finally { setLoading(false); }
   }
 
   async function confirmAction(currentModal) {
