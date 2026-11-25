@@ -1,5 +1,5 @@
 import './components.css';
-import { createContext, useCallback, useContext, useEffect, useRef, useState } from 'react';
+import { createContext, isValidElement, useCallback, useContext, useEffect, useRef, useState } from 'react';
 import { X, Search, ArrowRight, CalendarDays, ClipboardList, ChartNoAxesCombined, Inbox, LoaderCircle, AlertCircle, Eye, EyeOff } from 'lucide-react';
 const ModalCloseContext = createContext(null);
 
@@ -12,11 +12,12 @@ export function IconButton({ icon: Icon, label, ...props }) { return <button typ
 export function SearchField({ value, onChange, placeholder = 'Buscar...', label = 'Buscar' }) { return <div className="search-field"><Search size={19} aria-hidden="true" /><input type="search" aria-label={label} placeholder={placeholder} value={value} onChange={event => onChange(event.target.value)} /></div>; }
 export function Field({ label, name, children, required = false, hint, ...props }) {
     const helpId = hint ? name + '-hint' : undefined;
-    return <div className="field"><label htmlFor={name}>{label}</label>{children || <input id={name} name={name} required={required} aria-describedby={helpId} {...props} />} {hint && <small id={helpId}>{hint}</small>}</div>;
+    const isRequired = required || (isValidElement(children) && children.props.required);
+    return <div className="field"><label htmlFor={name}>{label}{isRequired && <> <span className="required" aria-hidden="true">*</span><span className="sr-only"> obrigatório</span></>}</label>{children || <input id={name} name={name} required={required} aria-describedby={helpId} {...props} />} {hint && <small id={helpId}>{hint}</small>}</div>;
 }
 export function PasswordField({ name = 'password', label = 'Senha', autoComplete = 'current-password', ...props }) {
     const [visible, setVisible] = useState(false);
-    return <div className="field"><label htmlFor={name}>{label}</label><div className="password-field"><input id={name} name={name} type={visible ? 'text' : 'password'} autoComplete={autoComplete} required {...props} /><IconButton icon={visible ? EyeOff : Eye} label={visible ? 'Ocultar senha' : 'Mostrar senha'} onClick={() => setVisible(!visible)} /></div></div>;
+    return <div className="field"><label htmlFor={name}>{label} <span className="required" aria-hidden="true">*</span><span className="sr-only"> obrigatório</span></label><div className="password-field"><input id={name} name={name} type={visible ? 'text' : 'password'} autoComplete={autoComplete} required {...props} /><IconButton icon={visible ? EyeOff : Eye} label={visible ? 'Ocultar senha' : 'Mostrar senha'} onClick={() => setVisible(!visible)} /></div></div>;
 }
 export function Badge({ children, tone }) { const text = String(children); const semantic = tone || (text === 'Concluída' || text === 'Concluído' || text === 'Ativo' ? 'success' : text === 'Em atendimento' || text === 'Em tratamento' ? 'warning' : text === 'Cancelada' || text === 'Inativo' ? 'neutral' : text === 'Retorno' ? 'purple' : 'blue'); return <span className={'badge ' + semantic}><span className="status-dot" />{children}</span>; }
 export function EmptyState({ title = 'Nenhum registro encontrado', description, action }) { return <div className="empty-state"><span className="empty-icon"><Inbox size={29} /></span><h3>{title}</h3>{description && <p>{description}</p>}{action}</div>; }

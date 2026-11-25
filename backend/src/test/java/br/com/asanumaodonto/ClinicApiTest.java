@@ -47,12 +47,40 @@ class ClinicApiTest {
         mvc.perform(get("/api/bootstrap").session(secretary)).andExpect(jsonPath("$.procedures").isEmpty())
                 .andExpect(jsonPath("$.records").isEmpty())
                 .andExpect(jsonPath("$.appointments[0].price").doesNotExist())
-                .andExpect(jsonPath("$.appointmentOptions[0].price").doesNotExist());
-        var p = mvc
-                .perform(post("/api/patients").session(secretary).contentType(MediaType.APPLICATION_JSON)
-                        .content(json.writeValueAsString(Map.of("name", "Paciente Spring", "age", 30, "phone",
-                                "11999998888", "status", "Ativo", "insurance", "Amil"))))
-                .andExpect(status().isCreated()).andExpect(jsonPath("$.insurance").doesNotExist()).andReturn();
+                .andExpect(jsonPath("$.appointmentOptions[0].price").doesNotExist())
+                .andExpect(jsonPath("$.patients[0].age").doesNotExist());
+        var patientData = new HashMap<String, Object>();
+        patientData.put("name", "Paciente Spring");
+        patientData.put("phone", "11999998888");
+        patientData.put("email", "paciente@example.com");
+        patientData.put("birthDate", "1990-04-15");
+        patientData.put("cpf", "31415926590");
+        patientData.put("status", "Ativo");
+        for (String requiredField : List.of("cpf", "email", "birthDate")) {
+            var invalidPatient = new HashMap<>(patientData);
+            invalidPatient.remove(requiredField);
+            mvc.perform(post("/api/patients").session(secretary).contentType(MediaType.APPLICATION_JSON)
+                    .content(json.writeValueAsString(invalidPatient))).andExpect(status().isBadRequest());
+        }
+        var invalidCpf = new HashMap<>(patientData);
+        invalidCpf.put("cpf", "11111111111");
+        mvc.perform(post("/api/patients").session(secretary).contentType(MediaType.APPLICATION_JSON)
+                .content(json.writeValueAsString(invalidCpf))).andExpect(status().isBadRequest());
+        var invalidEmail = new HashMap<>(patientData);
+        invalidEmail.put("email", "email-invalido");
+        mvc.perform(post("/api/patients").session(secretary).contentType(MediaType.APPLICATION_JSON)
+                .content(json.writeValueAsString(invalidEmail))).andExpect(status().isBadRequest());
+        var futureBirthDate = new HashMap<>(patientData);
+        futureBirthDate.put("birthDate", "2099-01-01");
+        mvc.perform(post("/api/patients").session(secretary).contentType(MediaType.APPLICATION_JSON)
+                .content(json.writeValueAsString(futureBirthDate))).andExpect(status().isBadRequest());
+        var p = mvc.perform(post("/api/patients").session(secretary).contentType(MediaType.APPLICATION_JSON)
+                        .content(json.writeValueAsString(patientData)))
+                .andExpect(status().isCreated()).andExpect(jsonPath("$.insurance").doesNotExist())
+                .andExpect(jsonPath("$.age").doesNotExist())
+                .andExpect(jsonPath("$.cpf").value("31415926590"))
+                .andExpect(jsonPath("$.email").value("paciente@example.com"))
+                .andExpect(jsonPath("$.birthDate").value("1990-04-15")).andReturn();
         String patient = json.readTree(p.getResponse().getContentAsString()).get("id").asText();
         var appointment = new HashMap<String, Object>(Map.of("patientId", patient, "procedureId", "pr1", "date",
                 "2030-10-21", "time", "09:00", "status", "Confirmada", "dentist", "Lucas Maximo", "payment", "Pix"));
