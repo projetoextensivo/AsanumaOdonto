@@ -84,6 +84,10 @@ class ClinicApiTest {
         String patient = json.readTree(p.getResponse().getContentAsString()).get("id").asText();
         var appointment = new HashMap<String, Object>(Map.of("patientId", patient, "procedureId", "pr1", "date",
                 "2030-10-21", "time", "09:00", "status", "Confirmada", "dentist", "Lucas Maximo", "payment", "Pix"));
+        var missingDentist = new HashMap<>(appointment);
+        missingDentist.remove("dentist");
+        mvc.perform(post("/api/appointments").session(secretary).contentType(MediaType.APPLICATION_JSON)
+                .content(json.writeValueAsString(missingDentist))).andExpect(status().isBadRequest());
         var created = mvc
                 .perform(post("/api/appointments").session(secretary).contentType(MediaType.APPLICATION_JSON)
                         .content(json.writeValueAsString(appointment)))
