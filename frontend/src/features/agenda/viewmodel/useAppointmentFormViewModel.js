@@ -3,7 +3,7 @@ import { useMutationFormViewModel } from '@/shared/viewmodel/useMutationFormView
 
 export function useAppointmentFormViewModel(props) {
   const [procedureId, setProcedureId] = useState(props.appointment?.procedureId || '');
-  const form = useMutationFormViewModel({ ...props, kind: 'appointments' });
+  const form = useMutationFormViewModel({ ...props, item: props.appointment, kind: 'appointments' });
   const procedure = props.procedures.find(item => item.id === procedureId);
   return { ...form, procedure, procedureId, setProcedureId };
 }
