@@ -16,3 +16,25 @@
   align-items: center;
   gap: 7px
 }
+
+.modal .appointment-form .field {
+  gap: 4px;
+  margin-bottom: 8px
+}
+
+.modal .appointment-form .field input,
+.modal .appointment-form .field select,
+.modal .appointment-form .field textarea {
+  min-height: 36px;
+  padding: 7px 10px
+}
+
+.modal .appointment-form .procedure-preview {
+  padding: 8px 11px;
+  margin: -2px 0 9px
+}
+
+.modal .appointment-form .form-footer {
+  margin-top: 10px;
+  padding-top: 10px
+}

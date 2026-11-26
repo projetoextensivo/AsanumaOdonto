@@ -118,12 +118,15 @@ public class AuthService {
     public Map<String, Object> account(Map<String, Object> b, Map<String, Object> u) {
         if (text(b, "name").isEmpty())
             throw new ApiException("Informe seu nome.");
-        if (!text(b, "newPassword").isEmpty()) {
-            if (!matches(text(b, "currentPassword"), text(u, "password")))
+        String currentPassword = text(b, "currentPassword");
+        String newPassword = text(b, "newPassword");
+        if (currentPassword.isEmpty() != newPassword.isEmpty())
+            throw new ApiException("Para alterar a senha, informe a senha atual e a nova senha.");
+        if (!newPassword.isEmpty()) {
+            if (!matches(currentPassword, text(u, "password")))
                 throw new ApiException("A senha atual está incorreta.");
-            if (text(b, "newPassword").length() < 8 || text(b, "newPassword").length() > 72)
-                throw new ApiException("Use uma senha com 8 a 72 caracteres.");
-            u.put("password", encode(text(b, "newPassword")));
+            validatePassword(newPassword);
+            u.put("password", encode(newPassword));
         }
         u.put("name", text(b, "name"));
         repo.updateUser(u);

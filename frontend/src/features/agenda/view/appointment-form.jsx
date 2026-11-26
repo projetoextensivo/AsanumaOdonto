@@ -8,7 +8,7 @@ import { useAppointmentFormViewModel } from '../viewmodel/useAppointmentFormView
 export function AppointmentForm({ appointment, initialDate, initialTime, patients, procedures, settings, user, onSave, onCancel, onDelete }) {
     const { busy, error, submit, procedure, procedureId, setProcedureId } = useAppointmentFormViewModel({ appointment, procedures, onSave, onCancel });
     const requestClose = useModalClose({ confirm: false });
-    return <form onSubmit={submit}>
+    return <form className="appointment-form" onSubmit={submit}>
         <ErrorNotice>{error}</ErrorNotice>
         <div className="form-grid">
             <Field label="Paciente" name="patientId" required>
@@ -43,10 +43,14 @@ export function AppointmentForm({ appointment, initialDate, initialTime, patient
                 <select id="payment" name="payment" defaultValue={appointment?.payment || 'Pix'}>{paymentMethods.map(s => <option key={s}>{s}</option>)}</select>
             </Field>
         </div>
-        {isAdmin(user) && <Field label="Desconto (R$)" name="discount" type="number" min="0" step="0.01" max={procedure?.price} defaultValue={appointment?.discount || 0} />}
-        <Field label="Observações" name="notes">
+        {isAdmin(user) ? <div className="form-grid appointment-extra-fields">
+            <Field label="Desconto (R$)" name="discount" type="number" min="0" step="0.01" max={procedure?.price} defaultValue={appointment?.discount || 0} />
+            <Field label="Observações" name="notes">
+                <textarea id="notes" name="notes" rows="2" defaultValue={appointment?.notes} placeholder="Informações adicionais para a consulta" />
+            </Field>
+        </div> : <Field label="Observações" name="notes">
             <textarea id="notes" name="notes" rows="2" defaultValue={appointment?.notes} placeholder="Informações adicionais para a consulta" />
-        </Field>
+        </Field>}
         <FormFooter onCancel={onCancel} busy={busy} label={appointment ? 'Salvar alterações' : 'Agendar consulta'} extra={appointment && <Button type="button" variant="danger-ghost" className="push-right" onClick={() => requestClose(() => onDelete(appointment))}>Excluir consulta</Button>} />
     </form>;
 }

@@ -760,10 +760,10 @@ table {
 .modal {
   width: calc(100% - 36px);
   max-width: 510px;
-  max-height: calc(100dvh - 70px);
+  max-height: calc(100dvh - 40px);
   border: 1px solid #dce7f3;
   border-radius: 15px;
-  padding: 29px;
+  padding: 23px;
   box-shadow: 0 25px 100px #06233b40;
   background: white;
   color: var(--navy);
@@ -832,7 +832,7 @@ table {
   align-items: flex-start;
   justify-content: space-between;
   gap: 15px;
-  margin-bottom: 26px
+  margin-bottom: 18px
 }
 
 .modal-heading h2 {
@@ -880,17 +880,37 @@ table {
 }
 
 .modal .field {
+  gap: 5px;
+  margin-bottom: 12px;
   font-size: 14px
 }
 
 .modal .field input,
 .modal .field select,
 .modal .field textarea {
+  min-height: 40px;
+  padding: 8px 11px;
   font-size: 14px
 }
 
 .modal .field small {
   font-size: 14px
+}
+
+.modal .form-footer {
+  gap: 9px;
+  margin-top: 15px;
+  padding-top: 14px
+}
+
+.modal .form-footer .button {
+  min-height: 40px;
+  padding: 9px 14px
+}
+
+.modal .procedure-preview {
+  padding: 9px 12px;
+  margin: -2px 0 12px
 }
 
 .confirmation-icon {
@@ -1118,16 +1138,16 @@ table {
   }
 
   .modal {
-    padding: 24px 22px;
-    max-height: calc(100dvh - 35px)
+    padding: 19px 18px;
+    max-height: calc(100dvh - 24px)
   }
 
   .modal .form-grid {
-    gap: 0 15px
+    gap: 0 12px
   }
 
   .modal-heading {
-    margin-bottom: 23px
+    margin-bottom: 15px
   }
 
   .modal-heading h2 {

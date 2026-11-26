@@ -217,6 +217,13 @@ public class ClinicService {
 
     public Map<String, Object> saveSettings(Map<String, Object> b) {
         need(!text(b, "clinicName").isEmpty(), "Informe o nome da clínica.");
+        need(text(b, "phone").replaceAll("\\D", "").matches("\\d{10,13}"),
+                "Informe um telefone válido com DDD.");
+        String email = text(b, "email");
+        need(email.length() <= 254 && email.matches("[^\\s@]+@[^\\s@]+\\.[^\\s@]+"),
+                "Informe um e-mail válido para a clínica.");
+        need(!text(b, "address").isEmpty(), "Informe o endereço da clínica.");
+        need(text(b, "address").length() <= 250, "O endereço deve ter no máximo 250 caracteres.");
         need(time(text(b, "openTime")).isBefore(time(text(b, "closeTime"))), "Confira o expediente.");
         var cfg = new HashMap<>(settings());
         for (String k : List.of("clinicName", "phone", "email", "address", "openTime", "closeTime"))

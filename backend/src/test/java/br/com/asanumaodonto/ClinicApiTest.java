@@ -32,6 +32,40 @@ class ClinicApiTest {
                 .andExpect(status().isOk()).andReturn();
         var admin = (MockHttpSession) login.getRequest().getSession();
         mvc.perform(get("/api/procedures").session(admin)).andExpect(status().isOk());
+        var clinicSettings = new HashMap<String, Object>(Map.of(
+                "clinicName", "Asanuma Odonto",
+                "phone", "(11) 99999-8888",
+                "email", "contato@example.com",
+                "address", "Rua de Teste, 123",
+                "openTime", "08:00",
+                "closeTime", "18:00"));
+        for (String requiredField : List.of("phone", "email", "address")) {
+            var incompleteSettings = new HashMap<>(clinicSettings);
+            incompleteSettings.remove(requiredField);
+            mvc.perform(put("/api/settings").session(admin).contentType(MediaType.APPLICATION_JSON)
+                    .content(json.writeValueAsString(incompleteSettings))).andExpect(status().isBadRequest());
+        }
+        var invalidClinicPhone = new HashMap<>(clinicSettings);
+        invalidClinicPhone.put("phone", "123");
+        mvc.perform(put("/api/settings").session(admin).contentType(MediaType.APPLICATION_JSON)
+                .content(json.writeValueAsString(invalidClinicPhone))).andExpect(status().isBadRequest());
+        var invalidClinicEmail = new HashMap<>(clinicSettings);
+        invalidClinicEmail.put("email", "email-invalido");
+        mvc.perform(put("/api/settings").session(admin).contentType(MediaType.APPLICATION_JSON)
+                .content(json.writeValueAsString(invalidClinicEmail))).andExpect(status().isBadRequest());
+        mvc.perform(put("/api/settings").session(admin).contentType(MediaType.APPLICATION_JSON)
+                .content(json.writeValueAsString(clinicSettings))).andExpect(status().isOk());
+
+        mvc.perform(put("/api/account").session(admin).contentType(MediaType.APPLICATION_JSON)
+                .content(json.writeValueAsString(Map.of("name", "Lucas Maximo", "newPassword", "SenhaNova@2026"))))
+                .andExpect(status().isBadRequest());
+        mvc.perform(put("/api/account").session(admin).contentType(MediaType.APPLICATION_JSON)
+                .content(json.writeValueAsString(Map.of("name", "Lucas Maximo", "currentPassword", "Odonto@2026"))))
+                .andExpect(status().isBadRequest());
+        mvc.perform(put("/api/account").session(admin).contentType(MediaType.APPLICATION_JSON)
+                .content(json.writeValueAsString(Map.of("name", "Lucas Maximo"))))
+                .andExpect(status().isOk()).andExpect(jsonPath("$.name").value("Lucas Maximo"));
+
         var signup = new HashMap<String, Object>(Map.of("name", "Secretária Teste", "email", "secretaria@example.com",
                 "password", "Senha@2026", "confirmPassword", "Senha@2026", "terms", true, "role", "Administrador"));
         mvc.perform(post("/api/auth/register").contentType(MediaType.APPLICATION_JSON)
