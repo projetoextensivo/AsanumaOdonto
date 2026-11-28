@@ -17,6 +17,11 @@ export function useClinicSettingsViewModel({ onUpdated, onNotify }) {
 export function useAccountViewModel({ onUpdated, onNotify }) {
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState('');
+  const [passwordChangeRequested, setPasswordChangeRequested] = useState(false);
+  function onPasswordChange(event) {
+    const form = event.currentTarget.form;
+    setPasswordChangeRequested(Boolean(form.elements.currentPassword.value || form.elements.newPassword.value));
+  }
   async function submit(event) {
     event.preventDefault(); const form = event.currentTarget; setBusy(true); setError('');
     try {
@@ -25,5 +30,5 @@ export function useAccountViewModel({ onUpdated, onNotify }) {
     } catch (cause) { setError(errorMessage(cause)); }
     finally { setBusy(false); }
   }
-  return { busy, error, submit };
+  return { busy, error, submit, passwordChangeRequested, onPasswordChange };
 }
