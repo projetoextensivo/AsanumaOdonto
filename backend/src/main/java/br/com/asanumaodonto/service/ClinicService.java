@@ -31,6 +31,8 @@ public class ClinicService {
 
     public Map<String, Object> visible(String kind, Map<String, Object> item, boolean admin) {
         var out = new HashMap<>(item);
+        if (kind.equals("patients"))
+            out.remove("age");
         if (!admin && kind.equals("appointments")) {
             out.remove("price");
             out.remove("discount");
@@ -43,7 +45,7 @@ public class ClinicService {
         var result = new HashMap<String, Object>();
         result.put("user", auth.publicUser(user));
         result.put("settings", settings());
-        result.put("patients", repo.list("patients"));
+        result.put("patients", repo.list("patients").stream().map(p -> visible("patients", p, admin)).toList());
         result.put("procedures", admin ? repo.list("procedures") : List.of());
         result.put("appointmentOptions", repo.list("procedures").stream()
                 .map(p -> Map.of("id", p.get("id"), "name", p.get("name"), "duration", p.get("duration"))).toList());
@@ -87,6 +89,23 @@ public class ClinicService {
             throw new ApiException(message);
     }
 
+    private boolean validCpf(String value) {
+        String cpf = value.replaceAll("\\D", "");
+        if (!cpf.matches("\\d{11}") || cpf.chars().distinct().count() == 1)
+            return false;
+        for (int digit = 9; digit <= 10; digit++) {
+            int sum = 0;
+            for (int i = 0; i < digit; i++)
+                sum += (cpf.charAt(i) - '0') * (digit + 1 - i);
+            int checkDigit = sum * 10 % 11;
+            if (checkDigit == 10)
+                checkDigit = 0;
+            if (checkDigit != cpf.charAt(digit) - '0')
+                return false;
+        }
+        return true;
+    }
+
     @Transactional
     public synchronized Map<String, Object> save(String kind, String id, Map<String, Object> b,
             Map<String, Object> user) {
@@ -96,16 +115,17 @@ public class ClinicService {
         switch (kind) {
             case "patients" -> {
                 need(text(b, "name").length() >= 3, "Informe o nome completo.");
-                double age = number(b, "age");
-                need(age >= 0 && age <= 120 && age == Math.floor(age), "Informe uma idade entre 0 e 120.");
                 need(text(b, "phone").replaceAll("\\D", "").length() >= 10, "Informe telefone com DDD.");
-                need(text(b, "email").isEmpty() || text(b, "email").matches("[^\\s@]+@[^\\s@]+\\.[^\\s@]+"),
-                        "Confira o e-mail.");
+                need(text(b, "email").matches("[^\\s@]+@[^\\s@]+\\.[^\\s@]+"), "Informe um e-mail válido.");
+                need(validCpf(text(b, "cpf")), "Informe um CPF válido.");
+                need(!text(b, "birthDate").isEmpty(), "Informe a data de nascimento.");
+                var birthDate = date(text(b, "birthDate"));
+                need(!birthDate.isAfter(LocalDate.now(ZoneId.of("America/Sao_Paulo"))),
+                        "A data de nascimento não pode estar no futuro.");
                 need(List.of("Ativo", "Inativo", "Em tratamento", "Retorno").contains(text(b, "status")),
                         "Status inválido.");
                 for (String k : List.of("name", "phone", "email", "status", "birthDate", "cpf", "allergies", "notes"))
                     out.put(k, text(b, k));
-                out.put("age", (int) age);
             }
             case "procedures" -> {
                 auth.requireAdmin(user);
@@ -197,6 +217,13 @@ public class ClinicService {
 
     public Map<String, Object> saveSettings(Map<String, Object> b) {
         need(!text(b, "clinicName").isEmpty(), "Informe o nome da clínica.");
+        need(text(b, "phone").replaceAll("\\D", "").matches("\\d{10,13}"),
+                "Informe um telefone válido com DDD.");
+        String email = text(b, "email");
+        need(email.length() <= 254 && email.matches("[^\\s@]+@[^\\s@]+\\.[^\\s@]+"),
+                "Informe um e-mail válido para a clínica.");
+        need(!text(b, "address").isEmpty(), "Informe o endereço da clínica.");
+        need(text(b, "address").length() <= 250, "O endereço deve ter no máximo 250 caracteres.");
         need(time(text(b, "openTime")).isBefore(time(text(b, "closeTime"))), "Confira o expediente.");
         var cfg = new HashMap<>(settings());
         for (String k : List.of("clinicName", "phone", "email", "address", "openTime", "closeTime"))

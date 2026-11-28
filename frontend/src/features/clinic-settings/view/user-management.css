@@ -19,6 +19,7 @@
 
 .user-table-wrap {
   overflow-x: auto;
+  contain: paint;
 }
 
 .user-table {
